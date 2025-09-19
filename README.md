@@ -13,7 +13,7 @@ cp .env.example .env
 
 - `VITE_API_BASE_URL` – Base URL for the shared backend service that now handles authentication and dashboard APIs.
 - `VITE_OAUTH_GOOGLE_CLIENT_ID` – Google OAuth client ID for initiating the replacement auth flow.
-- `GOOGLE_OAUTH_CLIENT_ID` – Server-side Google OAuth client ID used by the Supabase functions when constructing the authorization URL.
+- `GOOGLE_OAUTH_CLIENT_ID` – Server-side Google OAuth client ID used by the API server when constructing the authorization URL.
 - `GOOGLE_OAUTH_REDIRECT_URI` – Allowed redirect/callback URL that Google should send OAuth responses to. This should match the redirect registered in Google Cloud and the client-side handler that exchanges the code for tokens.
 
 These variables are consumed by `src/utils/api.ts`, which centralizes all calls to the new backend and automatically injects stored JWTs.
@@ -23,4 +23,12 @@ These variables are consumed by `src/utils/api.ts`, which centralizes all calls 
 Run `npm i` to install the dependencies.
 
 Run `npm run dev` to start the development server.
+
+To start the API locally with Deno, run:
+
+```
+npm run api:serve
+```
+
+This boots the shared Hono app defined in `src/server/api/app.ts` via the entry point at `src/server/api/serve.ts`.
   
