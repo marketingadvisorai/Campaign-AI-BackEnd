@@ -1,7 +1,6 @@
+# LLM Tune - Admin Dashboard (Arman)
 
-  # LLM Tune - Admin Dashboard (Arman)
-
-  This is a code bundle for LLM Tune - Admin Dashboard (Arman). The original project is available at https://www.figma.com/design/amNzcxDsfxdCHbAWyhidMm/LLM-Tune---Admin-Dashboard--Arman-.
+This is a code bundle for LLM Tune - Admin Dashboard (Arman). The original project is available at https://www.figma.com/design/amNzcxDsfxdCHbAWyhidMm/LLM-Tune---Admin-Dashboard--Arman-.
 
 ## Environment configuration
 
@@ -11,12 +10,12 @@ Copy `.env.example` to `.env` and update the values for your environment:
 cp .env.example .env
 ```
 
-- `VITE_API_BASE_URL` – Base URL for the Supabase Edge Functions that power authentication and dashboard APIs.
-- `VITE_OAUTH_GOOGLE_CLIENT_ID` – Google OAuth client ID for initiating the replacement auth flow.
-- `GOOGLE_OAUTH_CLIENT_ID` – Server-side Google OAuth client ID used by the Supabase Edge Function handlers (`src/supabase/functions/make-server/index.ts`, `src/supabase/functions/server/index.tsx`) when constructing the authorization URL.
-- `GOOGLE_OAUTH_REDIRECT_URI` – Allowed redirect/callback URL that Google should send OAuth responses to. This should match the redirect registered in Google Cloud, the Supabase functions above, and the client-side handler that exchanges the code for tokens.
+- `VITE_API_BASE_URL` – Base URL for the Campaign AI API served by the Hono application in `src/server/api/app.ts`. When running locally, point this to the address exposed by the Deno server (for example `http://localhost:8000`).
+- `VITE_OAUTH_GOOGLE_CLIENT_ID` – Google OAuth client ID for initiating the client-side auth flow.
+- `GOOGLE_OAUTH_CLIENT_ID` – Server-side Google OAuth client ID consumed by the Hono handlers when constructing the authorization URL.
+- `GOOGLE_OAUTH_REDIRECT_URI` – Allowed redirect/callback URL that Google should send OAuth responses to. This should match the redirect registered in Google Cloud, the API server, and the client-side handler that exchanges the code for tokens.
 
-These variables are consumed by the Supabase Edge Functions that orchestrate OAuth (`src/supabase/functions/make-server/index.ts`, `src/supabase/functions/server/index.tsx`) and by the shared authentication service at `src/server/auth/service.ts`, which issues tokens and performs database operations for those handlers.
+These variables are consumed by the API handlers under `src/server/api/app.ts` and by the shared authentication service at `src/server/auth/service.ts`, which issues tokens and performs database operations for those handlers.
 
 ## Running the code
 
@@ -24,12 +23,6 @@ Run `npm i` to install the dependencies.
 
 Run `npm run dev` to start the development server.
 
-The backend logic now runs inside Supabase Edge Functions rather than a standalone Deno service. Use the Supabase CLI to serve or deploy the functions housed under `src/supabase/functions/`, for example:
+Run `npm run api:serve` (or `deno run -A src/server/api/serve.ts`) to start the Hono API server. Ensure `deno` is installed locally and export the environment variables above so the server can issue tokens and talk to your database adapter of choice.
 
-```
-supabase functions serve make-server
-supabase functions serve server
-```
-
-Refer to the Supabase documentation for details on configuring your project and deploying these handlers.
-  
+Refer to the Deno and deployment platform documentation for details on configuring your project and deploying the API server.
