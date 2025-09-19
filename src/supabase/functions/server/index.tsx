@@ -19,12 +19,64 @@ app.use('*', logger(console.log));
 const db = getDatabaseAdapter();
 const authService = new AuthService(db);
 
+const OAUTH_PROVIDERS = {
+  google: {
+    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+    clientIdEnvKey: 'GOOGLE_OAUTH_CLIENT_ID',
+    redirectUriEnvKey: 'GOOGLE_OAUTH_REDIRECT_URI',
+    defaultScope: 'openid email profile',
+  },
+} as const;
+
+type SupportedOAuthProvider = keyof typeof OAUTH_PROVIDERS;
+
 // Helper function to get user from token
 async function getUser(request: Request) {
   return authService.authenticateRequest(request);
 }
 
 // Authentication Routes
+app.get('/make-server-5efafb23/auth/oauth/:provider', (c) => {
+  const providerParam = c.req.param('provider').toLowerCase();
+
+  if (!(providerParam in OAUTH_PROVIDERS)) {
+    return c.json({ error: 'Unsupported OAuth provider' }, 400);
+  }
+
+  const providerKey = providerParam as SupportedOAuthProvider;
+  const config = OAUTH_PROVIDERS[providerKey];
+
+  const clientId = Deno.env.get(config.clientIdEnvKey);
+  const redirectUri = Deno.env.get(config.redirectUriEnvKey);
+
+  if (!clientId || !redirectUri) {
+    return c.json({ error: 'OAuth provider is not configured' }, 500);
+  }
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: config.defaultScope,
+    access_type: 'offline',
+    prompt: 'consent',
+  });
+
+  const state = c.req.query('state');
+  if (state) {
+    params.set('state', state);
+  }
+
+  const authorizationUrl = `${config.authorizationEndpoint}?${params.toString()}`;
+  const acceptHeader = c.req.header('accept') ?? '';
+
+  if (acceptHeader.includes('application/json')) {
+    return c.json({ authorizationUrl });
+  }
+
+  return c.redirect(authorizationUrl);
+});
+
 app.post('/make-server-5efafb23/auth/signup', async (c) => {
   try {
     const { email, password, name } = await c.req.json();
