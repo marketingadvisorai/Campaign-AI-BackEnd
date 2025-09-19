@@ -3,7 +3,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { Dashboard } from './components/Dashboard';
 import { SetupWizard } from './components/SetupWizard';
 import { supabase } from './utils/supabase/client';
-import { projectId } from './utils/supabase/info';
+import { getSupabaseFunctionUrl } from './utils/supabase/info';
 
 // Theme Context
 const ThemeContext = createContext();
@@ -68,7 +68,7 @@ export default function App() {
 
   const checkUserSetup = async (userId) => {
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/user/setup-status`, {
+      const response = await fetch(getSupabaseFunctionUrl('make-server-5efafb23/user/setup-status'), {
         headers: {
           'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token)}`
         }

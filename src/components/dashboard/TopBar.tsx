@@ -39,7 +39,6 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { supabase } from '../../utils/supabase/client';
-import { projectId } from '../../utils/supabase/info';
 
 export function TopBar({ user, toggleSidebar, onClientSelect }) {
   const [searchOpen, setSearchOpen] = useState(false);
