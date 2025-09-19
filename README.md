@@ -16,6 +16,13 @@ cp .env.example .env
 
 These variables are consumed by `src/utils/api.ts`, which centralizes all calls to the new backend and automatically injects stored JWTs.
 
+## Session bootstrapping
+
+The frontend restores sessions by calling `GET /auth/me`, expecting a payload shaped like `{ "user": { ... } }`. The Supabase functions expose this endpoint to hydrate the dashboard when a stored token is present:
+
+- `/auth/me` within the `make-server` function
+- `/make-server-5efafb23/auth/me` within the `server` function (matching the existing route prefix)
+
 ## Running the code
 
 Run `npm i` to install the dependencies.

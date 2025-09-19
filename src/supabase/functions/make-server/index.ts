@@ -18,6 +18,17 @@ async function getUser(request: Request) {
 }
 
 // Authentication Routes
+app.get('/auth/me', async (c) => {
+  try {
+    const user = await authService.authenticateRequest(c.req.raw);
+    return c.json({ user });
+  } catch (error) {
+    console.log('Auth me error:', error);
+    const message = error instanceof Error ? error.message : 'Invalid token';
+    return c.json({ error: message }, 401);
+  }
+});
+
 app.post('/auth/signup', async (c) => {
   try {
     const { email, password, name } = await c.req.json();
