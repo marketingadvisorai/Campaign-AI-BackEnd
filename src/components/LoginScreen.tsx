@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
 import { supabase } from '../utils/supabase/client';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { getSupabaseFunctionUrl, supabaseAnonKey } from '../utils/supabase/info';
 import { AlertCircle, Zap } from 'lucide-react';
 
 export function LoginScreen({ onLoginSuccess }) {
@@ -32,11 +32,11 @@ export function LoginScreen({ onLoginSuccess }) {
         onLoginSuccess(data.user);
       } else {
         // Sign up through server
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/auth/signup`, {
+        const response = await fetch(getSupabaseFunctionUrl('make-server-5efafb23/auth/signup'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`
+            'Authorization': `Bearer ${supabaseAnonKey}`
           },
           body: JSON.stringify({ email, password, name })
         });

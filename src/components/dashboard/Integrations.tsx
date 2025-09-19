@@ -18,7 +18,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { supabase } from '../../utils/supabase/client';
-import { projectId } from '../../utils/supabase/info';
+import { getSupabaseFunctionUrl } from '../../utils/supabase/info';
 
 // Company Logos as SVG Components
 const OpenAILogo = () => (
@@ -178,7 +178,7 @@ export function Integrations() {
   const loadIntegrations = async () => {
     try {
       const accessToken = await supabase.auth.getSession().then(s => s.data.session?.access_token);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/integrations`, {
+      const response = await fetch(getSupabaseFunctionUrl('make-server-5efafb23/integrations'), {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -197,14 +197,17 @@ export function Integrations() {
     setLoading(true);
     try {
       const accessToken = await supabase.auth.getSession().then(s => s.data.session?.access_token);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/integrations/${category}/${providerId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(data)
-      });
+      const response = await fetch(
+        getSupabaseFunctionUrl(`make-server-5efafb23/integrations/${category}/${providerId}`),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify(data)
+        }
+      );
 
       if (response.ok) {
         await loadIntegrations();
@@ -220,11 +223,14 @@ export function Integrations() {
     setLoading(true);
     try {
       const accessToken = await supabase.auth.getSession().then(s => s.data.session?.access_token);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/integrations/${category}/${providerId}/test`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
+      const response = await fetch(
+        getSupabaseFunctionUrl(`make-server-5efafb23/integrations/${category}/${providerId}/test`),
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
         }
-      });
+      );
 
       const result = await response.json();
       // Handle test result
@@ -239,12 +245,15 @@ export function Integrations() {
     setLoading(true);
     try {
       const accessToken = await supabase.auth.getSession().then(s => s.data.session?.access_token);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/integrations/${category}/${providerId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
+      const response = await fetch(
+        getSupabaseFunctionUrl(`make-server-5efafb23/integrations/${category}/${providerId}`),
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
         }
-      });
+      );
 
       if (response.ok) {
         await loadIntegrations();
