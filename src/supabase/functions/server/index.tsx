@@ -104,6 +104,26 @@ app.post('/make-server-5efafb23/auth/login', async (c) => {
   }
 });
 
+app.get('/make-server-5efafb23/auth/me', async (c) => {
+  try {
+    const user = await authService.authenticateRequest(c.req.raw);
+    return c.json({ user });
+  } catch (error) {
+    console.log('Get current user error:', error);
+    return c.json({ error: error.message }, 401);
+  }
+});
+
+app.post('/make-server-5efafb23/auth/logout', async (c) => {
+  try {
+    await authService.authenticateRequest(c.req.raw);
+    return c.json({ success: true });
+  } catch (error) {
+    console.log('Logout error:', error);
+    return c.json({ error: error.message }, 401);
+  }
+});
+
 // User Setup Routes
 app.get('/make-server-5efafb23/user/setup-status', async (c) => {
   try {
@@ -183,7 +203,7 @@ app.post('/make-server-5efafb23/integrations/:category/:provider', async (c) => 
   }
 });
 
-app.get('/make-server-5efafb23/integrations/:category/:provider/test', async (c) => {
+const handleIntegrationTest = async (c: any) => {
   try {
     const user = await getUser(c.req.raw);
     const { category, provider } = c.req.param();
@@ -216,7 +236,10 @@ app.get('/make-server-5efafb23/integrations/:category/:provider/test', async (c)
     console.log('Test integration error:', error);
     return c.json({ error: error.message }, 500);
   }
-});
+};
+
+app.get('/make-server-5efafb23/integrations/:category/:provider/test', handleIntegrationTest);
+app.post('/make-server-5efafb23/integrations/:category/:provider/test', handleIntegrationTest);
 
 app.delete('/make-server-5efafb23/integrations/:category/:provider', async (c) => {
   try {

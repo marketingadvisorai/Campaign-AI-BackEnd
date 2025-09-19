@@ -93,6 +93,28 @@ app.post('/auth/login', async (c) => {
   }
 });
 
+app.get('/auth/me', async (c) => {
+  try {
+    const user = await authService.authenticateRequest(c.req.raw);
+    return c.json({ user });
+  } catch (error) {
+    console.log('Get current user error:', error);
+    return c.json({ error: error.message }, 401);
+  }
+});
+
+app.post('/auth/logout', async (c) => {
+  try {
+    // Ensure the token is valid before logging out
+    await authService.authenticateRequest(c.req.raw);
+    // No server-side session state is persisted, but this ensures client tokens can be cleared
+    return c.json({ success: true });
+  } catch (error) {
+    console.log('Logout error:', error);
+    return c.json({ error: error.message }, 401);
+  }
+});
+
 // User Setup Routes
 app.get('/user/setup-status', async (c) => {
   try {
