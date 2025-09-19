@@ -4,8 +4,7 @@ import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
-import { supabase } from '../utils/supabase/client';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { login as apiLogin, signup as apiSignup, beginOAuthLogin } from '../utils/api';
 import { AlertCircle, Zap } from 'lucide-react';
 
 export function LoginScreen({ onLoginSuccess }) {
@@ -22,56 +21,33 @@ export function LoginScreen({ onLoginSuccess }) {
     setError('');
 
     try {
+      let user;
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-        onLoginSuccess(data.user);
+        user = await apiLogin({ email, password });
       } else {
-        // Sign up through server
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/auth/signup`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`
-          },
-          body: JSON.stringify({ email, password, name })
-        });
-
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error);
-
-        // Now sign in
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-        onLoginSuccess(data.user);
+        user = await apiSignup({ email, password, name });
       }
+
+      if (!user) {
+        throw new Error('Authentication succeeded but no user information was returned.');
+      }
+
+      onLoginSuccess(user);
     } catch (error) {
-      setError(error.message);
+      const message = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      if (error) throw error;
+      setLoading(true);
+      beginOAuthLogin('google');
     } catch (error) {
-      setError(error.message);
+      const message = error instanceof Error ? error.message : 'Unable to start Google authentication.';
+      setError(message);
       setLoading(false);
     }
   };

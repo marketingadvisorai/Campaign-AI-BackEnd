@@ -6,8 +6,7 @@ import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { CheckCircle, Circle, ExternalLink, Zap } from 'lucide-react';
-import { supabase } from '../utils/supabase/client';
-import { projectId } from '../utils/supabase/info';
+import { completeSetup as completeSetupRequest } from '../utils/api';
 
 const steps = [
   { id: 1, title: 'Connect AI Models', description: 'Setup LLM integrations' },
@@ -39,19 +38,8 @@ export function SetupWizard({ onComplete }) {
   const completeSetup = async () => {
     setLoading(true);
     try {
-      const accessToken = await supabase.auth.getSession().then(s => s.data.session?.access_token);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/user/complete-setup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(setupData)
-      });
-
-      if (response.ok) {
-        onComplete();
-      }
+      await completeSetupRequest(setupData);
+      onComplete();
     } catch (error) {
       console.error('Setup completion error:', error);
     } finally {
