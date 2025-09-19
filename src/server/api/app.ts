@@ -1,4 +1,5 @@
 import { Hono } from 'npm:hono@4.5.8';
+import type { Context } from 'npm:hono@4.5.8';
 import { cors } from 'npm:hono/cors';
 import { logger } from 'npm:hono/logger';
 import {
@@ -104,6 +105,7 @@ export function createApp() {
   const authService = new AuthService(db);
 
   const getUser = (request: Request) => authService.authenticateRequest(request);
+  const requireUser = (c: Context) => getUser(c.req.raw);
 
   app.get('/auth/oauth/:provider', (c) => {
     const providerParam = c.req.param('provider').toLowerCase();
@@ -178,17 +180,17 @@ export function createApp() {
 
   app.post('/auth/logout', async (c) => {
     try {
-      await getUser(c.req.raw);
+      await requireUser(c);
+      return c.json({ success: true });
     } catch (error) {
       console.log('Logout error:', error);
+      return c.json({ error: getErrorMessage(error) }, 401);
     }
-
-    return c.json({ success: true });
   });
 
   app.get('/auth/me', async (c) => {
     try {
-      const user = await getUser(c.req.raw);
+      const user = await requireUser(c);
       return c.json({ user });
     } catch (error) {
       console.log('Get current user error:', error);
@@ -275,9 +277,9 @@ export function createApp() {
     }
   });
 
-  app.post('/integrations/:category/:provider/test', async (c) => {
+  const testIntegrationHandler = async (c: Context) => {
     try {
-      const user = await getUser(c.req.raw);
+      const user = await requireUser(c);
       const { category, provider } = c.req.param();
 
       const integration = await db.getUserIntegration(
@@ -287,7 +289,7 @@ export function createApp() {
       );
 
       if (!integration) {
-        return c.json({ error: 'Integration not found' }, 404);
+        return c.json({ success: false, message: 'Integration not found' }, 404);
       }
 
       let testResult = { success: false, message: 'Unknown provider' };
@@ -320,7 +322,10 @@ export function createApp() {
       console.log('Test integration error:', error);
       return c.json({ error: getErrorMessage(error) }, 500);
     }
-  });
+  };
+
+  app.post('/integrations/:category/:provider/test', testIntegrationHandler);
+  app.get('/integrations/:category/:provider/test', testIntegrationHandler);
 
   app.delete('/integrations/:category/:provider', async (c) => {
     try {
