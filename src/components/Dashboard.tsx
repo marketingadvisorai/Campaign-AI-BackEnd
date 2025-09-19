@@ -12,7 +12,7 @@ import { Billing } from './dashboard/Billing';
 import { AuditLog } from './dashboard/AuditLog';
 import { Settings } from './dashboard/Settings';
 
-export function Dashboard({ user }) {
+export function Dashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -55,10 +55,11 @@ export function Dashboard({ user }) {
       />
       
       <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
-        <TopBar 
-          user={user} 
+        <TopBar
+          user={user}
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onClientSelect={setSelectedClient}
+          onLogout={onLogout}
         />
         
         <main className="flex-1 overflow-auto">

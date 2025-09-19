@@ -2,8 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { LoginScreen } from './components/LoginScreen';
 import { Dashboard } from './components/Dashboard';
 import { SetupWizard } from './components/SetupWizard';
-import { supabase } from './utils/supabase/client';
-import { projectId } from './utils/supabase/info';
+import { getCurrentUser, getSetupStatus } from './utils/api';
 
 // Theme Context
 const ThemeContext = createContext();
@@ -34,18 +33,21 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
     
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
-      setLoading(false);
-    });
+    const initializeSession = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+          await checkUserSetup();
+        }
+      } catch (error) {
+        console.error('Error loading session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => subscription.unsubscribe();
+    initializeSession();
   }, []);
 
   const toggleTheme = () => {
@@ -62,19 +64,15 @@ export default function App() {
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
-    // Check if user needs setup
-    checkUserSetup(userData.id);
+    checkUserSetup().catch((error) => {
+      console.error('Error verifying setup after login:', error);
+    });
   };
 
-  const checkUserSetup = async (userId) => {
+  const checkUserSetup = async () => {
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/user/setup-status`, {
-        headers: {
-          'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token)}`
-        }
-      });
-      const data = await response.json();
-      setNeedsSetup(!data.isSetupComplete);
+      const data = await getSetupStatus();
+      setNeedsSetup(!data?.isSetupComplete);
     } catch (error) {
       console.error('Error checking setup status:', error);
       setNeedsSetup(true);
@@ -82,6 +80,11 @@ export default function App() {
   };
 
   const handleSetupComplete = () => {
+    setNeedsSetup(false);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
     setNeedsSetup(false);
   };
 
@@ -106,7 +109,7 @@ export default function App() {
       ) : needsSetup ? (
         <SetupWizard onComplete={handleSetupComplete} />
       ) : (
-        <Dashboard user={user} />
+        <Dashboard user={user} onLogout={handleLogout} />
       )}
     </ThemeContext.Provider>
   );

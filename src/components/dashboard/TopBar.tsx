@@ -38,10 +38,9 @@ import {
   Building2,
   ExternalLink
 } from 'lucide-react';
-import { supabase } from '../../utils/supabase/client';
-import { projectId } from '../../utils/supabase/info';
+import { logout as apiLogout } from '../../utils/api';
 
-export function TopBar({ user, toggleSidebar, onClientSelect }) {
+export function TopBar({ user, toggleSidebar, onClientSelect, onLogout }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [clients, setClients] = useState([]);
@@ -104,7 +103,13 @@ export function TopBar({ user, toggleSidebar, onClientSelect }) {
   }, [searchQuery, clients]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await apiLogout();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      onLogout?.();
+    }
   };
 
   const handleClientSelect = (client) => {

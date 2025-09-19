@@ -17,8 +17,12 @@ import {
   RefreshCw,
   Trash2
 } from 'lucide-react';
-import { supabase } from '../../utils/supabase/client';
-import { projectId } from '../../utils/supabase/info';
+import {
+  fetchIntegrations as fetchIntegrationsRequest,
+  updateIntegration as updateIntegrationRequest,
+  testIntegration as testIntegrationRequest,
+  deleteIntegration as deleteIntegrationRequest,
+} from '../../utils/api';
 
 // Company Logos as SVG Components
 const OpenAILogo = () => (
@@ -177,17 +181,8 @@ export function Integrations() {
 
   const loadIntegrations = async () => {
     try {
-      const accessToken = await supabase.auth.getSession().then(s => s.data.session?.access_token);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/integrations`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setIntegrations(data);
-      }
+      const data = await fetchIntegrationsRequest();
+      setIntegrations(data || {});
     } catch (error) {
       console.error('Error loading integrations:', error);
     }
@@ -196,19 +191,8 @@ export function Integrations() {
   const saveIntegration = async (category, providerId, data) => {
     setLoading(true);
     try {
-      const accessToken = await supabase.auth.getSession().then(s => s.data.session?.access_token);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/integrations/${category}/${providerId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(data)
-      });
-
-      if (response.ok) {
-        await loadIntegrations();
-      }
+      await updateIntegrationRequest(category, providerId, data);
+      await loadIntegrations();
     } catch (error) {
       console.error('Error saving integration:', error);
     } finally {
@@ -219,15 +203,7 @@ export function Integrations() {
   const testConnection = async (category, providerId) => {
     setLoading(true);
     try {
-      const accessToken = await supabase.auth.getSession().then(s => s.data.session?.access_token);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/integrations/${category}/${providerId}/test`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-
-      const result = await response.json();
-      // Handle test result
+      await testIntegrationRequest(category, providerId);
     } catch (error) {
       console.error('Error testing connection:', error);
     } finally {
@@ -238,17 +214,8 @@ export function Integrations() {
   const disconnectIntegration = async (category, providerId) => {
     setLoading(true);
     try {
-      const accessToken = await supabase.auth.getSession().then(s => s.data.session?.access_token);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-5efafb23/integrations/${category}/${providerId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-
-      if (response.ok) {
-        await loadIntegrations();
-      }
+      await deleteIntegrationRequest(category, providerId);
+      await loadIntegrations();
     } catch (error) {
       console.error('Error disconnecting integration:', error);
     } finally {
