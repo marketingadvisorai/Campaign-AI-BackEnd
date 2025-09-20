@@ -11,12 +11,20 @@ Copy `.env.example` to `.env` and update the values for your environment:
 cp .env.example .env
 ```
 
-- `VITE_API_BASE_URL` – Base URL for the Supabase Edge Functions that power authentication and dashboard APIs.
-- `VITE_OAUTH_GOOGLE_CLIENT_ID` – Google OAuth client ID for initiating the replacement auth flow.
-- `GOOGLE_OAUTH_CLIENT_ID` – Server-side Google OAuth client ID used by the Supabase Edge Function handlers (`src/supabase/functions/make-server/index.ts`, `src/supabase/functions/server/index.tsx`) when constructing the authorization URL.
-- `GOOGLE_OAUTH_REDIRECT_URI` – Allowed redirect/callback URL that Google should send OAuth responses to. This should match the redirect registered in Google Cloud, the Supabase functions above, and the client-side handler that exchanges the code for tokens.
+- `VITE_API_BASE_URL` – Base URL for the standalone Campaign AI API service that exposes authentication and dashboard endpoints.
+- `VITE_OAUTH_GOOGLE_CLIENT_ID` – Google OAuth client ID used in the browser to kick off the replacement auth flow.
+- `GOOGLE_OAUTH_CLIENT_ID` – Server-side Google OAuth client ID read by the standalone API service (`src/server/api/app.ts`) when constructing the authorization URL.
+- `GOOGLE_OAUTH_REDIRECT_URI` – Allowed redirect/callback URL that Google should send OAuth responses to. This should match the redirect registered in Google Cloud, the API service above, and the client-side handler that exchanges the code for tokens.
 
-These variables are consumed by the Supabase Edge Functions that orchestrate OAuth (`src/supabase/functions/make-server/index.ts`, `src/supabase/functions/server/index.tsx`) and by the shared authentication service at `src/server/auth/service.ts`, which issues tokens and performs database operations for those handlers.
+These variables are consumed by the Deno-based API service (`src/server/api/app.ts`) and by the shared authentication service at `src/server/auth/service.ts`, which issues tokens and performs database operations on behalf of the HTTP handlers.
+
+The move to a standalone API introduces additional runtime configuration that must be set in the server environment:
+
+- `DB_VENDOR` – Selects which database adapter to load (`postgres`, `mysql`, or `mongo`).
+- Postgres adapter: `POSTGRES_URL` (required) and `POSTGRES_PASSWORD` (optional helper for passwordless URLs).
+- PlanetScale/MySQL adapter: `PLANETSCALE_HOST`, `PLANETSCALE_USERNAME`, `PLANETSCALE_PASSWORD`, and `PLANETSCALE_DATABASE`.
+- MongoDB adapter: `MONGODB_URI` and `MONGODB_DB` (defaults to `campaign_ai`).
+- Authentication: `JWT_SECRET` (required signing secret) and `JWT_TTL_SECONDS` (token lifetime in seconds, defaults to `3600`).
 
 ## Running the code
 
